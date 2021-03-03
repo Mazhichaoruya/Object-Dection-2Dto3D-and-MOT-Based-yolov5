@@ -40,13 +40,24 @@ void showCloud(cv::viz::Viz3d& win, std::map<int,track> &tracks, pcl::PointCloud
     std::vector<cv::viz::WArrow> arrows;
     std::vector<cv::viz::WText3D> texts;
     std::vector<cv::viz::WPolyLine> traces;
+//    std::vector<cv::viz::WSphere> spheres;
     for (auto trc:tracks){
         //分track添加cube arrow text
-        cv::viz::WCube cube(cv::Point3f(trc.second.viz.min_x,trc.second.viz.min_y,trc.second.viz.min_z),cv::Point3f(trc.second.viz.max_x,trc.second.viz.max_y,trc.second.viz.max_z),true,color_table[trc.second.ID%15]);
-        cv::viz::WArrow arrow(cv::Point3f(trc.second.p.x,trc.second.p.y,trc.second.p.z),cv::Point3f(trc.second.p.x+trc.second.v.vx*2,trc.second.p.y+trc.second.v.vy*2,trc.second.p.z+trc.second.v.vz*2),0.01,color_table[15-trc.second.ID%15]);
-        cv::viz::WText3D text(trc.second.classname,cv::Point3f(trc.second.viz.max_x,trc.second.viz.max_y,trc.second.viz.max_z),0.05,true,color_table[trc.second.ID%15]);
         cv::viz::WPolyLine trace(trc.second.trace,color_table[trc.second.ID%15]);
-        cubes.push_back(cube);arrows.push_back(arrow);texts.push_back(text);traces.push_back(trace);
+        if (trc.second.Information_3D&&trc.second.Nomatched==0){
+//            cv::viz::WSphere sphere(cv::Point3f(trc.second.p.x,trc.second.p.y,trc.second.p.z),trc.second.s.w/2,trc.second.s.h/2,color_table[trc.second.ID%15]);
+            cv::viz::WCube cube(cv::Point3f(trc.second.viz.min_x,trc.second.viz.min_y,trc.second.viz.min_z),cv::Point3f(trc.second.viz.max_x,trc.second.viz.max_y,trc.second.viz.max_z),true,color_table[trc.second.ID%15]);
+            cv::viz::WArrow arrow(cv::Point3f(trc.second.p.x,trc.second.p.y,trc.second.p.z),cv::Point3f(trc.second.p.x+trc.second.v.vx,trc.second.p.y+trc.second.v.vy,trc.second.p.z+trc.second.v.vz),0.01,color_table[trc.second.ID%15]);
+            cv::viz::WText3D text(trc.second.classname,cv::Point3f(trc.second.viz.max_x,trc.second.viz.max_y,trc.second.viz.max_z),0.05,true,color_table[trc.second.ID%15]);
+            cubes.push_back(cube);arrows.push_back(arrow);texts.push_back(text);traces.push_back(trace);
+//            spheres.push_back(sphere);
+        } else{
+            continue;
+//            cv::viz::WArrow arrow(cv::Point3f(trc.second.p.x,trc.second.p.y,trc.second.p.z),cv::Point3f(trc.second.p.x+trc.second.ve.vx/10,trc.second.p.y+trc.second.ve.vy/10,trc.second.p.z+trc.second.ve.vz/10),0.01,color_table[15-trc.second.ID%15]);
+//            cv::viz::WText3D text(trc.second.classname,cv::Point3f(trc.second.p.x,trc.second.p.y,trc.second.p.z),0.05,true,color_table[trc.second.ID%15]);
+//            cv::viz::WSphere sphere(cv::Point3f(trc.second.p.x,trc.second.p.y,trc.second.p.z),0.3,0.3,color_table[15-trc.second.ID%15]);
+//            arrows.push_back(arrow);texts.push_back(text);traces.push_back(trace);spheres.push_back(sphere);
+        }
         int length=trc.second.points.size();
         cv::Mat part(cv::Size{length,1}, CV_32FC3, cv::Scalar::all(0));
         for (int i = 0; i < trc.second.points.size(); ++i) {
@@ -57,15 +68,38 @@ void showCloud(cv::viz::Viz3d& win, std::map<int,track> &tracks, pcl::PointCloud
 //    win.setBackgroundColor();
     win.showWidget("merge", collection);
     win.showWidget("coord", cv::viz::WCoordinateSystem());
-    for (int i = 0; i < cubes.size(); ++i) {
+    for (int i = 0; i < traces.size(); ++i) {
         win.showWidget("cube"+std::to_string(i),cubes.at(i));
         win.showWidget("arrow"+std::to_string(i),arrows.at(i));
         win.showWidget("ID"+std::to_string(i),texts.at(i));
         win.showWidget("Trace"+std::to_string(i),traces.at(i));
+//        win.showWidget("sphere"+std::to_string(i),spheres.at(i));
     }
     win.spinOnce(0);
 }
-
+void showImg(cv::Mat &color, std::map<int,track> &tracks){
+    for(auto trc:tracks){
+        int plus=0;
+        std::string plus_show,age;
+        plus=trc.second.ve.vz/0.1;
+        for (int i = 0; i < abs(int(plus)); ++i) {
+            if (plus>0)
+              plus_show=plus_show+"+";
+            else
+                plus_show=plus_show+"-";
+        }
+        age=" age"+std::to_string(trc.second.age);
+       cv::rectangle(color,trc.second.Bbox,color_table[trc.first%15],1) ;
+       cv::putText(color, plus_show, cv::Point((trc.second.Bbox.x+trc.second.Bbox.width/2), (trc.second.Bbox.y+trc.second.Bbox.height/2)), cv::FONT_HERSHEY_PLAIN, 1.2, color_table[trc.first%15], 2);//图像上添加labels
+        cv::putText(color, trc.second.classname+age, cv::Point(trc.second.Bbox.x, trc.second.Bbox.y), cv::FONT_HERSHEY_PLAIN, 1.2, color_table[trc.first%15], 2);//图像上添加labels
+//        cv::arrowedLine(color,cv::Point{(trc.second.Bbox.x+trc.second.Bbox.width/2), (trc.second.Bbox.y+trc.second.Bbox.height/2)},cv::Point{(int )(trc.second.Bbox.x+trc.second.Bbox.width/2.0+trc.second.ve.vx), (int )(trc.second.Bbox.y+trc.second.Bbox.height/2.0+trc.second.ve.vy)},
+//                       color_table[trc.first%15],3);
+    }
+    cv::imshow("Track 2D",color);
+    cv::waitKey(1);
+}
+/*****/
+//PCL
 boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis (pcl::PointCloud<pcl::PointXYZI>::ConstPtr cloud){
     // --------------------------------------------
     // -----Open 3D viewer and add point cloud-----
@@ -129,7 +163,7 @@ cv::Mat ConvertDepthToPointCLoud(const cv::Mat& depth, cv::Mat &mask,Eigen::Vect
             }
         }
     }
-    mask = morphProcess(mask, cv::MORPH_ELLIPSE, cv::Size(5, 5), cv::MORPH_ERODE);//点云腐蚀处理
+    mask = morphProcess(mask, cv::MORPH_ELLIPSE, cv::Size(10, 10), cv::MORPH_ERODE);//点云腐蚀处理
 //     cv::imshow("mask", mask);
 //     cv::waitKey(0);
 //    for (int i = 0; i < mask.rows; ++i) {

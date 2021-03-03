@@ -7,8 +7,8 @@
 #include "iostream"
 #include "opencv2/core.hpp"
 #include "opencv2/opencv.hpp"
-#define StateNum 9
-#define MeasureNum 6
+#define StateNum 14 //px py pz bbox x y width height vx vy vz vu vv vw vh
+#define MeasureNum 7 //px py pz bbox x y width height
 class Kalmanf{
 private:
    int stateNum;                                      //状态值

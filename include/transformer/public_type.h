@@ -3,6 +3,154 @@
 #include <opencv2/opencv.hpp>
 #include <Eigen/Dense>
 
+namespace perception{
+
+    enum class RobotType
+    {
+        HLS,
+        Bella,
+        Hola,
+        Phoenix,
+        Peanut,
+        Firefox
+    };
+
+    struct Point3d{
+        Point3d(double px, double py, double pz)
+        {
+            x = px;
+            y = py;
+            z = pz;
+        }
+        Point3d()
+        {
+            x = 0.0;
+            y = 0.0;
+            z = 0.0;
+        }
+        double x;
+        double y;
+        double z;
+    };
+
+    struct Point2f{
+        Point2f(float px, float py)
+        {
+            x = px;
+            y = py;
+        }
+        Point2f()
+        {
+            x = 0.0f;
+            y = 0.0f;
+        }
+        float x;
+        float y;
+    };
+
+    struct Point3f{
+        Point3f(float px, float py, float pz)
+        {
+            x = px;
+            y = py;
+            z = pz;
+        }
+        Point3f()
+        {
+            x = 0.0f;
+            y = 0.0f;
+            z = 0.0f;
+        }
+        float x;
+        float y;
+        float z;
+    };
+
+    struct Point2i{
+        Point2i(int px, int py)
+        {
+            x = px;
+            y = py;
+        }
+        Point2i()
+        {
+            x = 0;
+            y = 0;
+        }
+        int x;
+        int y;
+    };
+
+    struct Point3i{
+        Point3i(int px, int py, int pz)
+        {
+            x = px;
+            y = py;
+            z = pz;
+        }
+        Point3i()
+        {
+            x = 0;
+            y = 0;
+            z = 0;
+        }
+        int x;
+        int y;
+        int z;
+    };
+
+    struct Recti{
+        Recti(int rx, int ry, int w, int h)
+        {
+            x = rx;
+            y = ry;
+            width = w;
+            height = h;
+        }
+        Recti()
+        {
+            x = 0;
+            y = 0;
+            width = 0;
+            height = 0;
+        }
+        int x;
+        int y;
+        int width;
+        int height;
+    };
+
+    struct Rectf{
+        Rectf(float rx, float ry, float w, float h)
+        {
+            x = rx;
+            y = ry;
+            width = w;
+            height = h;
+        }
+        Rectf()
+        {
+            x = 0.0f;
+            y = 0.0f;
+            width = 0.0f;
+            height = 0.0f;
+        }
+        float x;
+        float y;
+        float width;
+        float height;
+    };
+
+    struct Rectd{
+        double x;
+        double y;
+        double width;
+        double height;
+    };
+
+}
+
+
 namespace costmap{
 // Header
 struct StdStamp {
@@ -22,7 +170,7 @@ struct StdHeader {
 struct StdPose2D {
     float x;
     float y;
-    float th;
+    float th;//弧度表示
 };
 
 struct StdPose2DWithHeader {

@@ -114,8 +114,8 @@ cv::Mat Detector::Detection(cv::Mat &img){
             obj.area=get_rect(img, res[j].bbox);
             obj.name=classNamesVec[(int)res[j].class_id];
             obj.classID=(int)res[j].class_id;
-            cv::rectangle(img, obj.area, cv::Scalar(0x27, 0xC1, 0x36), 2);//绘制矩形框
-            cv::putText(img, obj.name, cv::Point(obj.area.x, obj.area.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);//图像上添加labels
+//            cv::rectangle(img, obj.area, cv::Scalar(0x27, 0xC1, 0x36), 2);//绘制矩形框
+//            cv::putText(img, obj.name, cv::Point(obj.area.x, obj.area.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);//图像上添加labels
 //            std::cout<<obj.name<<";";//输出目标label
             Objects.push_back(obj);//将目标导出存储
         }

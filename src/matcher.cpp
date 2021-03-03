@@ -23,7 +23,7 @@ void Matcher::GetValidArea() {
     }
 
 }
-std::map<std::array<int,2>,float> Matcher::BoxIouMatch() {
+std::map<std::array<int,2>,float> Matcher::BoxIouMatch(){
     //获取交并集--Iou
     GetValidArea();
     for (int i = 0; i < objects.size(); ++i) {// 按照目标序号依次匹配
@@ -47,7 +47,7 @@ std::map<std::array<int,2>,float> Matcher::BoxIouMatch() {
     }
     for (auto &res:results) {
         if (objects.at(res.first.at(0)).area.area()>clusters.at(res.first.at(1)).images.area())
-            res.second=-res.second;
+            res.second=-res.second;//若目标区域面积大于聚类区域面积 标记为负数以作为区分
     }
     return results;
 }

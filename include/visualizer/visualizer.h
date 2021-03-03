@@ -20,6 +20,7 @@ void show_point_cloud(PointCloudPtrType cloud, std::string display_name) {//pclç
 //            break;
     }
 }
+void showImg(cv::Mat &color, std::map<int,track> &tracks);
 void showCloud(cv::viz::Viz3d& win, std::map<int,track> &tracks, pcl::PointCloud<pcl::PointXYZI>::Ptr &pointcloud);
 void viewerRunner(boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer);
 void show_point_cloud_cv(cv::Mat &pointcloud,std::string displayname);

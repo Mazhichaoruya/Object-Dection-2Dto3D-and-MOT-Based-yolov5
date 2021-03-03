@@ -36,7 +36,7 @@ void DBSCAN::DBSCAN_Cluster(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,cv::Size
     pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new  pcl::search::KdTree<pcl::PointXYZI>);
     tree->setInputCloud(cloud);
     DBSCANKdtreeCluster<pcl::PointXYZI> ec;
-    ec.setCorePointMinPts(10);
+    ec.setCorePointMinPts(15);
     ec.setClusterTolerance(0.1);
     ec.setMinClusterSize(20);
     ec.setMaxClusterSize(2000);

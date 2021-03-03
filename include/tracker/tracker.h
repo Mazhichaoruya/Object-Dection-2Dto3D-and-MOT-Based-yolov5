@@ -17,6 +17,7 @@ private:
     int trackIdNow;//记录当前ID数
     int death_period,birth_period;//生存与死亡周期
     cv::Mat A,H,Q,R,P;
+    void output3d();
 public:
     Tracker(cv::Mat A,cv::Mat H,cv::Mat P,cv::Mat Q,cv::Mat R,float max_iou,int birth,int death);
     void new_track(track &tr);
@@ -25,7 +26,8 @@ public:
     void predict();
     void update(std::vector<Detection> &detections);
     void check_state(int trackId);
-    std::map<int,track> report_tracks();
+    std::vector<track_report> report_tracks();
+    std::map<int,track> show_tracks();
 };
 
 

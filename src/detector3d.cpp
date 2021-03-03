@@ -5,6 +5,7 @@
 #include "detector/detector3d.h"
 #include "kalman/kalman.h"
 #include "cluster/cluster.h"
+#include "transformer/transformer.h"
 detector3d::detector3d(Eigen::Vector4d intrinsics,Eigen::Isometry3d T_rc,std::string weight_path,std::string classname_path) {
     Detector2D=Detector(weight_path,classname_path);
     M_in=intrinsics;
@@ -25,11 +26,13 @@ void detector3d::Reclustering(pcl::PointCloud<pcl::PointXYZI>::Ptr pPntCloud,cv:
         Output3D->points.push_back(pI);
     }
 }
-std::vector<Detection> detector3d::ReportResults() {
+std::vector<Detection> detector3d::ReportResults(){
 //    std::cout<<"num:"<<objects.size()<<std::endl;
     for (auto &object:objects){
-        middata m{0,0,0,10,10,10,0,0,0};
-        for (auto p:object.points){
+        middata m{-100,-100,-100,100,100,100,0,0,0};
+        for (auto &p:object.points){
+            if (Pose)
+             p=pcl::transformPoint(p,TR);//结合机器人位姿 转到世界坐标系
             if (m.max_x<p.x)
                 m.max_x=p.x;
             if (m.max_y<p.y)
@@ -46,16 +49,24 @@ std::vector<Detection> detector3d::ReportResults() {
             m.sum_y+=p.y;
             m.sum_z+=p.z;
         }
-        object.p={m.sum_x/object.points.size(),m.sum_y/object.points.size(),m.sum_z/object.points.size()};
-        object.s={m.max_x-m.min_x,m.max_y-m.min_y,m.max_y-m.min_y};
-        object.viz=m;
+        if (object.Information_3D== true){
+            object.p={m.sum_x/object.points.size(),m.sum_y/object.points.size(),m.sum_z/object.points.size()};
+            object.s={m.max_x-m.min_x,m.max_y-m.min_y,m.max_y-m.min_y};
+            object.viz=m;
+        } else{
+            object.p={0.0,0.0,0.0};
+            object.s={0.0,0.0,0.0};
+        }
     }
     return objects;
 }
-void detector3d::SetInput(cv::Mat &img, pcl::PointCloud<pcl::PointXYZI>::Ptr &pointcloud) {
+void detector3d::SetInput(cv::Mat &img, pcl::PointCloud<pcl::PointXYZI>::Ptr &pointcloud){
     auto clusterDB=DBSCAN(M_in,M_out);
     clusterDB.DBSCAN_Cluster(pointcloud,img.size());
+//    auto startd=std::clock();
     Output2D=Detector2D.Detection(img);
+//    auto endd=std::clock();
+//    cout<<"time-detect2d= "<<(float)(endd-startd)/CLOCKS_PER_SEC*1000<<endl;
     Output3D.reset(new pcl::PointCloud<pcl::PointXYZI>);
     Output3D=pointcloud;
     auto c=clusterDB.ReportClusteredResults();
@@ -65,28 +76,32 @@ void detector3d::SetInput(cv::Mat &img, pcl::PointCloud<pcl::PointXYZI>::Ptr &po
     objects.clear();//清空objects向量
     for (auto res:result) {
         Detection object;
+        //获取当前object信息
         object.ClassID=d.at(res.first.at(0)).classID;
         object.classname=d.at(res.first.at(0)).name;
-        if (abs(res.second) < IOU_Threshold_min) {
+        object.Bbox=d.at(res.first.at(0)).area;
+        object.Information_3D= false;
+        if (abs(res.second) < IOU_Threshold_min) {//匹配失败
 //                cout<<"failed"<<endl;
-            continue;
+            object.Information_3D= false;
         }
+        //首次聚类完成匹配 取中心点为质心
         if (abs(res.second) > IOU_Threshold_max ||
-            abs(res.second) > (IOU_Threshold_min + IOU_Threshold_max) / 2 && res.second < 0) {
+            abs(res.second) > (IOU_Threshold_min + IOU_Threshold_max) / 2 && res.second < 0){
             for (auto p:c.at(res.first.at(1)).ponits3d->points) {
                 p.intensity = d.at(res.first.at(0)).classID + 1;
                 Output3D->points.push_back(p);
                 object.points.push_back(p);
             }
-        }
-        if (abs(res.second) < IOU_Threshold_max && abs(res.second) > IOU_Threshold_min &&
-            res.second > 0) {//半监督聚类提升效果
+        }else {//(abs(res.second) < IOU_Threshold_max && abs(res.second) > IOU_Threshold_min &&res.second > 0)
+            //半监督聚类提升效果
+            //此时中心店应取聚类簇中心点
             Reclustering(c.at(res.first.at(1)).ponits3d,d.at(res.first.at(0)).area, c.at(res.first.at(1)).images,d.at(res.first.at(0)).classID+1,object.points);
         }
-        if (object.points.size()>0)
-            objects.push_back(object);
+        if (object.points.size()>20)//少于20个点认为是干扰 无效
+            object.Information_3D=true;
+        objects.push_back(object);
     }
-
 }
 void detector3d::destory() {
     Detector2D.destory();
